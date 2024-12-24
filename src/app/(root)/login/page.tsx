@@ -1,3 +1,4 @@
+'use client';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -7,22 +8,49 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import Image from 'next/image';
+import axios from 'axios';
+import { useRouter } from 'next/navigation';
+import { ChangeEvent, useState } from 'react';
+import { userStore } from '../../../../store/store';
 
 const LoginPage = () => {
+  const { setUser } = userStore();
+  const router = useRouter();
+  const [email, setEmail] = useState<String>('');
+  const [password, setPassword] = useState<String>('');
+  const [loading, setLoading] = useState<Boolean>(false);
+
+  const handleEmailChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+  };
+
+  const handlePasswordChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+  };
+
+  const handleLogin = async () => {
+    const payload = {
+      email,
+      password,
+    };
+    try {
+      setLoading(true);
+      const { data } = await axios.post(
+        `${process.env.NEXT_PUBLIC_CODE_RACER_API_URL}/api/v1/users/signin`,
+        payload
+      );
+      localStorage.setItem('token', data.token);
+      setUser(data.user);
+      router.push('/');
+    } catch (error) {
+      setLoading(false);
+      alert('login failed');
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-100">
-      <div className="flex justify-center align-middle w-1/2 bg-blue-300 p-12 lg:block">
-        <div className="relative flex justify-center align-middle w-1/2 bg-blue-300 p-12 lg:block">
-          <Image
-            src="/images/coderacer.webp"
-            alt="Login illustration"
-            layout="fill"
-            objectFit="cover"
-            className="rounded-lg shadow-lg"
-          />
-        </div>
-      </div>
+      <div className="flex justify-center align-middle w-1/2 bg-blue-300 p-12 lg:block"></div>
       <div className="flex w-full items-center justify-center lg:w-1/2">
         <Card className="w-[350px]">
           <CardHeader>
@@ -32,17 +60,29 @@ const LoginPage = () => {
             <form>
               <div className="grid w-full items-center gap-4">
                 <div className="flex flex-col space-y-1.5">
-                  <Input id="email" placeholder="이메일" />
+                  <Input
+                    id="email"
+                    placeholder="이메일"
+                    onChange={handleEmailChange}
+                  />
                 </div>
                 <div className="flex flex-col space-y-1.5">
-                  <Input id="password" type="password" placeholder="비밀번호" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="비밀번호"
+                    onChange={handlePasswordChange}
+                  />
                 </div>
               </div>
             </form>
           </CardContent>
           <CardFooter className="flex flex-col">
-            <Button className="w-full bg-purple-600 hover:bg-purple-700">
-              로그인
+            <Button
+              className="w-full bg-purple-600 hover:bg-purple-700"
+              onClick={handleLogin}
+            >
+              {loading ? 'Loading...' : '로그인'}
             </Button>
             <a href="#" className="mt-2 text-center text-sm text-blue-600">
               또는 비밀번호 찾기

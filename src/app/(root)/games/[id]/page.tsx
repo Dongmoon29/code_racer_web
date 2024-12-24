@@ -7,16 +7,19 @@ import axios from 'axios';
 import { languages } from '@/const/languages';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { userStore } from '../../../../../store/store';
 
 const IDENTIFIER = uuidv4();
 
 const Game = () => {
+  const { user } = userStore();
   const { id } = useParams<{ id: string }>();
   const [code1, setCode1] = useState(''); // Code for Editor 1
   const [code2, setCode2] = useState(''); // Code for Editor 2
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [codeSubmissionResult, setCodeSubmissionResult] = useState<String>('');
-  const identifier = IDENTIFIER;
+
+  const identifier = user?.id ?? '';
 
   const submitCode = async () => {
     const payload = {
@@ -35,11 +38,14 @@ const Game = () => {
 
     const ws = new WebSocket(`ws://localhost:8080/api/v1/games/${id}`);
 
-    ws.onopen = () => {};
+    ws.onopen = () => {
+      console.log('on open');
+    };
 
     ws.onmessage = (event) => {
+      console.log('on message');
       const data = JSON.parse(event.data);
-
+      console.log('data => ', data);
       if (data.id !== identifier) {
         setCode2(data.code);
       }
